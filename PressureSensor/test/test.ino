@@ -38,13 +38,12 @@ void print_serial(int input) {
 }
 
 void print_file(int input) {
-  dataFile.print("Input: " + (String)input);
-  dataFile.print("\n");
+  dataFile.println("Input: " + (String)input);
 }
 
 int record_data(int input) {
   if(dataFile) {
-    print_file(input);
+    //print_file(input);
     print_serial(input);
     return 1;
   }
@@ -63,6 +62,8 @@ void loop() {
       if (recording == LOW){
         // FIX: file name should change
         dataFile = SD.open("test.txt", FILE_WRITE);
+        dataFile.println("File Started");
+        dataFile.close();
         recording = HIGH;
         record_data(input);
       } else {
