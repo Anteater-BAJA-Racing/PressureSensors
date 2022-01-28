@@ -8,29 +8,61 @@
 
 // Analog Pins
 int analog0 = A0;
-int input;
 
 // Digital Pins (for recording)
-int recording = LOW;
-int last_recording = HIGH;
+int recording_toggle = 2;
+
+// Input Variables
+int input;
+
+// Recording Variables
+int recording;
+int last_recording = LOW;
 
 // File
-File dataFile;
+File logfile;
+char filename[] = "Tele00.txt";
 
 // SD Card
 const int chipSelect = 10;
+int sd;
 
-void setup() {
-  Serial.begin(9600);
-
-  Serial.print("Initializing SD card...");
+// Functions
+int check_sd(bool first_run=false, bool print_info=false) {
+  if(first_run) {
+    Serial.print("Initializing SD card... ");
+  }
+  else if(print_info) {
+    Serial.print("Checking SD card... ");
+  }
 
   if(!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    while (1);
+    if(print_info) {
+      Serial.println("card failed, or not present");
+    }
+    return 0;
   }
-  
-  Serial.println("card initialized.");
+  else {
+    if(print_info) {
+      Serial.println("card initialized.");
+    }
+    return 1;
+  }
+}
+
+void open_file() {
+  for (uint8_t i = 0; i < 100; i++) {
+    filename[4] = i/10 + '0';
+    filename[5] = i%10 + '0';
+    if (! SD.exists(filename)) {
+      logfile = SD.open(filename, FILE_WRITE); 
+      break;
+    }
+  }
+}
+
+void close_file() {
+  logfile.close();
 }
 
 void print_serial(int input) {
@@ -38,53 +70,61 @@ void print_serial(int input) {
 }
 
 void print_file(int input) {
-  dataFile.print("Input: " + (String)input);
-  dataFile.print("\n");
+  logfile.println("Input: " + (String)input);
 }
 
 int record_data(int input) {
-  if(dataFile) {
-    print_file(input);
-    print_serial(input);
-    return 1;
+  print_file(input);
+  print_serial(input);
+}
+
+void setup() {
+  Serial.begin(9600);
+
+  sd = check_sd(true, true);
+  while(!sd) {
+    sd = check_sd(false, true);
+    delay(10000);
   }
-  else {
-    return 0;
-  }
+
+  // Setting Pins
+  pinMode(analog0, INPUT);
+  pinMode(recording_toggle, INPUT_PULLUP);
+
+  // Input Variables
+  input = analogRead(analog0);
+  recording = digitalRead(recording_toggle);
 }
 
 void loop() {
-  input = analogRead(analog0);
-
-  if (recording == HIGH) {
-      record_data(input);
-  }
-  if (recording != last_recording) {
-      if (recording == LOW){
-        // FIX: file name should change
-        dataFile = SD.open("test.txt", FILE_WRITE);
-        recording = HIGH;
-        record_data(input);
-      } else {
-        dataFile.close();
-        recording = LOW;
-        Serial.println("Closing...");
+  sd = check_sd();
+  if(sd) {
+    recording = digitalRead(recording_toggle);
+    input = analogRead(analog0);
+    
+    if (last_recording != recording) {
+      if (recording == HIGH) {
+        last_recording = recording;
+        open_file();
+        Serial.println("Recording Starting");
       }
+      else {
+        last_recording = recording;
+        close_file();
+        Serial.println("Recording Ending");
+      }
+    }
+    else if (recording == HIGH) {
+      record_data(input);
+    }
+    else {
+      // Do Nothing
+      // Serial.println("Recording Pending");
+    }
+    delay(1000);
   }
-  last_recording = recording;
-  delay(1000);
+  else {
+    check_sd(false, true);
+    delay(10000);    
+  }
 }
-
-//const char* getFileName()
-//{
-//  String time_now = rtc.getTimeStr();
-//  String date_now = rtc.getDateStr();
-//  time_now.remove(2,1);
-//  time_now.remove(4,1);
-//  date_now.remove(2,8);
-//  strcpy (filename,time_now.c_str());
-//  strcat (filename,date_now.c_str());
-//  strcat (filename,".txt");
-//  Serial.print(filename);
-//  return filename;
-//}
