@@ -55,7 +55,7 @@ void open_file() {
     filename[4] = i/10 + '0';
     filename[5] = i%10 + '0';
     if (! SD.exists(filename)) {
-      logfile = SD.open(filename, FILE_WRITE); 
+      logfile = SD.open(filename, FILE_WRITE);
       break;
     }
   }
@@ -70,27 +70,12 @@ void print_serial(int input) {
 }
 
 void print_file(int input) {
-<<<<<<< HEAD
   logfile.println("Input: " + (String)input);
 }
 
 int record_data(int input) {
   print_file(input);
   print_serial(input);
-=======
-  dataFile.println("Input: " + (String)input);
-}
-
-int record_data(int input) {
-  if(dataFile) {
-    //print_file(input);
-    print_serial(input);
-    return 1;
-  }
-  else {
-    return 0;
-  }
->>>>>>> c71c75924164b57f3d62a90429757f2b535354cf
 }
 
 void setup() {
@@ -116,7 +101,7 @@ void loop() {
   if(sd) {
     recording = digitalRead(recording_toggle);
     input = analogRead(analog0);
-    
+
     if (last_recording != recording) {
       if (recording == HIGH) {
         last_recording = recording;
@@ -138,24 +123,8 @@ void loop() {
     }
     delay(1000);
   }
-<<<<<<< HEAD
   else {
     check_sd(false, true);
-    delay(10000);    
-=======
-  if (recording != last_recording) {
-      if (recording == LOW){
-        // FIX: file name should change
-        dataFile = SD.open("test.txt", FILE_WRITE);
-        dataFile.println("File Started");
-        dataFile.close();
-        recording = HIGH;
-        record_data(input);
-      } else {
-        dataFile.close();
-        recording = LOW;
-        Serial.println("Closing...");
-      }
->>>>>>> c71c75924164b57f3d62a90429757f2b535354cf
+    delay(10000);
   }
 }
