@@ -13,7 +13,11 @@ int analog0 = A0;
 int recording_toggle = 2;
 
 // Input Variables
-int input;
+int front_input;
+int rear_input;
+
+char front_title[] = "FronBrake";
+char rear_title[] = "RearBrake";
 
 // Recording Variables
 int recording;
@@ -26,6 +30,10 @@ char filename[] = "Tele00.txt";
 // SD Card
 const int chipSelect = 10;
 int sd;
+
+// Mode
+bool serial = true;
+bool storage = true;
 
 // Functions
 int check_sd(bool first_run=false, bool print_info=false) {
@@ -65,17 +73,21 @@ void close_file() {
   logfile.close();
 }
 
-void print_serial(int input) {
-  Serial.println("Input: " + (String)input);
+void print_serial(char name[], int input) {
+  Serial.println((String)name + ": " + (String)input);
 }
 
-void print_file(int input) {
-  logfile.println("Input: " + (String)input);
+void print_file(char name[], int input) {
+  logfile.println((String)name + ": " + (String)input);
 }
 
-int record_data(int input) {
-  print_file(input);
-  print_serial(input);
+int record_data(char name[], int input) {
+  if (storage == true) {
+    print_file(name, input);
+  }
+  if (serial == true) {
+    print_serial(name, input);    
+  }
 }
 
 void setup() {
@@ -92,7 +104,8 @@ void setup() {
   pinMode(recording_toggle, INPUT_PULLUP);
 
   // Input Variables
-  input = analogRead(analog0);
+  front_input = analogRead(analog0);
+  rear_input = analogRead(analog0);
   recording = digitalRead(recording_toggle);
 }
 
@@ -100,7 +113,8 @@ void loop() {
   sd = check_sd();
   if(sd) {
     recording = digitalRead(recording_toggle);
-    input = analogRead(analog0);
+    front_input = analogRead(analog0);
+    rear_input = analogRead(analog0);
 
     if (last_recording != recording) {
       if (recording == HIGH) {
@@ -115,7 +129,8 @@ void loop() {
       }
     }
     else if (recording == HIGH) {
-      record_data(input);
+      record_data(front_title, front_input);
+      record_data(rear_title, rear_input);
     }
     else {
       // Do Nothing
