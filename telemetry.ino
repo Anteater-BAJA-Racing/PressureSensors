@@ -8,6 +8,8 @@
 
 // Analog Pins
 int analog0 = A0;
+int analog1 = A1;
+
 
 // Digital Pins (for recording)
 int recording_toggle = 2;
@@ -114,7 +116,7 @@ void loop() {
   if(sd) {
     recording = digitalRead(recording_toggle);
     front_input = analogRead(analog0);
-    rear_input = analogRead(analog0);
+    rear_input = analogRead(analog1);
 
     if (last_recording != recording) {
       if (recording == HIGH) {
@@ -130,7 +132,7 @@ void loop() {
     }
     else if (recording == HIGH) {
       record_data(front_title, front_input);
-      record_data(rear_title, rear_input);
+      //record_data(rear_title, rear_input);
     }
     else {
       // Do Nothing
